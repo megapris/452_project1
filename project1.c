@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdbool.h>
-// #include <string.h>
+#include <string.h>
 #define READ 0
 #define WRITE 1
 int fd[100][2];
@@ -10,7 +10,7 @@ int numProcesses;
 int root;
 int next;
 int apple;
-int index;
+int myIndex;
 char inbox[100];
 int node;
 bool badApple = false;
@@ -28,8 +28,8 @@ void spawnProcesses(int count){
         printf("Error while forking");
     }
     else if(pid == 0){
-        index = count;
-        if(index == numProcesses / 2){
+        myIndex = count;
+        if(myIndex == numProcesses / 2){
             badApple = true;
         }
         spawnProcesses(count + 1);
@@ -40,22 +40,22 @@ void spawnProcesses(int count){
 }
 
 void sendMessage(struct apple myApple){
-    printf("Process %d is sending the message to Process %d...\n", index, index + 1 % numProcesses);
-    write(fd[index][1], &myApple, sizeof(char) * sizeof(myApple));
+    printf("Process %d is sending the message to Process %d...\n", myIndex, myIndex + 1 % numProcesses);
+    write(fd[myIndex][1], &myApple, sizeof(char) * sizeof(myApple));
 }
 
 void readMessage(){
     struct apple myApple;
-    int i = index == 0 ? numProcesses - 1 : index - 1;
+    int i = myIndex == 0 ? numProcesses - 1 : myIndex - 1;
     read(fd[i][0], &myApple, sizeof(char) * sizeof(myApple));
-    printf("Process %d recieved the message\n", index);
+    printf("Process %d recieved the message\n", myIndex);
     if(badApple){
         int myRand = rand() % 10000 + 500;
         char message[100];
         sprintf(message, "bad_apple%d", myRand);
         strcpy(myApple.message, message);
     }
-    if(index == myApple.node){
+    if(myIndex == myApple.node){
         strcpy(inbox, myApple.message);
         printf("The message is: %s\n", inbox);
         strcpy(myApple.message, "");
@@ -64,7 +64,7 @@ void readMessage(){
         // printf("sleeping... \n");
         sleep(1);
     }
-    if(index != 0){
+    if(myIndex != 0){
         sendMessage(myApple);
     }
 }
@@ -86,7 +86,7 @@ void main(){
     spawnProcesses(1);
     int pid = getpid();
     while(1){
-        if(index == 0){
+        if(myIndex == 0){
             printf("What is your message: ");
             scanf("%s", &myApple.message);
             printf("Which node would you like to recieve the message: ");
@@ -95,5 +95,5 @@ void main(){
         }
         readMessage();
     }
-    // printf("PROCESS %d EXITING\n", index);
+    // printf("PROCESS %d EXITING\n", myIndex);
 }
