@@ -78,7 +78,7 @@ void createPipes(int num){
     }
 }
 
-void main(){
+int main(){
     struct apple myApple;
     printf("How many processes: \n");
     scanf("%d", &numProcesses);
@@ -88,7 +88,7 @@ void main(){
     while(1){
         if(myIndex == 0){
             printf("What is your message: ");
-            scanf("%s", &myApple.message);
+            scanf("%s", myApple.message);
             printf("Which node would you like to recieve the message: ");
             scanf("%d", &myApple.node);
             sendMessage(myApple);
@@ -96,4 +96,6 @@ void main(){
         readMessage();
     }
     // printf("PROCESS %d EXITING\n", myIndex);
+
+    return 0;
 }
