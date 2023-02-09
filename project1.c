@@ -12,6 +12,11 @@ int index;
 char inbox[100];
 int node;
 
+struct apple{
+    char message[100];
+    int node;
+};
+
 void spawnProcesses(int count){
     pid_t pid;
     pid = getpid();
@@ -28,25 +33,26 @@ void spawnProcesses(int count){
     }
 }
 
-void sendMessage(char message[100]){
+void sendMessage(struct apple myApple){
     printf("Process %d is sending the message to Process %d...\n", index, index + 1 % numProcesses);
-    write(fd[index][1], &message, sizeof(char) * sizeof(message));
+    write(fd[index][1], &myApple, sizeof(char) * sizeof(myApple));
 }
 
 void readMessage(){
+    struct apple myApple;
     char message[100];
     int i = index == 0 ? numProcesses - 1 : index - 1;
-    // printf("Process %d is reading the message from Process %d...\n", index, i);
-    read(fd[i][0], &message, sizeof(char) * sizeof(char) * 100);
-    if(index == node){
-        // inbox = message;
-        printf("MESSAGE HAS BEEN RESEVED\n");
+    read(fd[i][0], &myApple, sizeof(char) * sizeof(myApple));
+    printf("Process %d rercieved the message\n", index);
+    if(index == myApple.node){
+        printf("The message is: %s\n", myApple.message);
+        strcpy(myApple.message, "");
     }
     else{
-        printf("sleeping... \n");
+        // printf("sleeping... \n");
         sleep(1);
-        sendMessage(message);
     }
+    sendMessage(myApple);
 }
 
 void createPipes(int num){
@@ -59,20 +65,21 @@ void createPipes(int num){
 }
 
 void main(){
-    char message[100];
+    struct apple myApple;
     printf("How many processes: \n");
     scanf("%d", &numProcesses);
     createPipes(numProcesses);
     spawnProcesses(1);
-    // wait();
     int pid = getpid();
-    if(apple == index){
-        printf("What is your message: ");
-        scanf("%s", &message);
-        printf("Which node would you like to recieve the message: ");
-        scanf("%d", &node);
-        sendMessage(message);
+    while(1){
+        if(index == 0){
+            printf("What is your message: ");
+            scanf("%s", &myApple.message);
+            printf("Which node would you like to recieve the message: ");
+            scanf("%d", &myApple.node);
+            sendMessage(myApple);
+        }
+        readMessage();
     }
-    readMessage();
-    printf("PROCESS %d EXITING\n", index);
+    // printf("PROCESS %d EXITING\n", index);
 }
