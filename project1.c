@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdbool.h>
+// #include <string.h>
 #define READ 0
 #define WRITE 1
 int fd[100][2];
@@ -55,7 +56,8 @@ void readMessage(){
         strcpy(myApple.message, message);
     }
     if(index == myApple.node){
-        printf("The message is: %s\n", myApple.message);
+        strcpy(inbox, myApple.message);
+        printf("The message is: %s\n", inbox);
         strcpy(myApple.message, "");
     }
     else{
