@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdbool.h>
 #define READ 0
 #define WRITE 1
 int fd[100][2];
@@ -11,6 +12,7 @@ int apple;
 int index;
 char inbox[100];
 int node;
+bool badApple = false;
 
 struct apple{
     char message[100];
@@ -26,6 +28,9 @@ void spawnProcesses(int count){
     }
     else if(pid == 0){
         index = count;
+        if(index == numProcesses / 2){
+            badApple = true;
+        }
         spawnProcesses(count + 1);
     }
     else{
@@ -40,10 +45,15 @@ void sendMessage(struct apple myApple){
 
 void readMessage(){
     struct apple myApple;
-    char message[100];
     int i = index == 0 ? numProcesses - 1 : index - 1;
     read(fd[i][0], &myApple, sizeof(char) * sizeof(myApple));
-    printf("Process %d rercieved the message\n", index);
+    printf("Process %d recieved the message\n", index);
+    if(badApple){
+        int myRand = rand() % 10000 + 500;
+        char message[100];
+        sprintf(message, "bad_apple%d", myRand);
+        strcpy(myApple.message, message);
+    }
     if(index == myApple.node){
         printf("The message is: %s\n", myApple.message);
         strcpy(myApple.message, "");
@@ -52,7 +62,9 @@ void readMessage(){
         // printf("sleeping... \n");
         sleep(1);
     }
-    sendMessage(myApple);
+    if(index != 0){
+        sendMessage(myApple);
+    }
 }
 
 void createPipes(int num){
