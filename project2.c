@@ -20,7 +20,6 @@ int oven;
 struct sembuf p = { 0, -1, SEM_UNDO};
 struct sembuf v = { 0, +1, SEM_UNDO};
 
-// #define FLOUR 0;
 const int flour = 1;
 const int sugar = 2;
 const int yeast = 3;
@@ -48,6 +47,8 @@ typedef struct{
     bool oven;
     Item targetItem;
 }Baker;
+
+void cook(Baker *baker, Item targetItem);
 
 const Item cookies = {0, {flour, sugar, milk, butter}, "cookies",0};
 const Item pancakes = {1, {flour, sugar, bakingSoda, salt, egg, milk, butter}, "pancakes",0};
@@ -100,70 +101,6 @@ void fetchItem(int id, bool pantry, Item item){
     }
 }
 
-void fetchAppliance(Baker *b){
-    waitSemaphore(spoon, b, 0);
-    waitSemaphore(mixer, b, 1);
-    waitSemaphore(bowl, b, 2);
-    waitSemaphore(oven, b, 3);
-    printf("THREAD %d COOKING FOOD\n", b->num);
-    sleep(5);
-    printf("THREAD %d RELEASING APPLIANCES\n", b->num);
-    releaseSemaphore(spoon, b, 0);
-    releaseSemaphore(bowl, b, 2);
-    releaseSemaphore(mixer, b, 1);
-    releaseSemaphore(oven, b, 3);
-}
-
-void * bakerFunc(void* arg){  
-    Baker* baker = (Baker *)arg;
-    srand(time(NULL) + baker->num);
-    Item allItems[5];
-    for(int i = 0; i < 5; i++){
-        allItems[i] = cookBook[i];
-    }
-    scrambleArray(&allItems,5, baker->num);
-    Item targetItem;
-    for(int i = 0; i < 5; i++){
-        baker->targetItem = allItems[i];
-        printf("THREAD %d is making %s\n", baker->num, baker->targetItem.name);
-        cook(baker, targetItem);
-    }
-    free(baker);
-}
-void cook(Baker *baker, Item targetItem){
-    bool visitPantry = rand() % 2;
-    fetchItem(baker->num, visitPantry, targetItem);
-    fetchItem(baker->num, !visitPantry, targetItem);
-    fetchAppliance(baker);
-}
-void waitSemaphore(int sem, Baker *b, int id){
-    char *appliance;
-    switch(id){
-        case 0:
-            appliance = "SPOON";
-            b->spoon = true;
-            break;
-        case 1:
-            appliance = "MIXER";
-            b->mixer = true;
-            break;
-        case 2:
-            appliance = "BOWL";
-            b->bowl = true;
-            break;
-        case 3:
-            appliance = "OVEN";
-            b->oven = true;
-            break;
-    }
-    printf("THREAD %d FETCHING %s\n", b->num, appliance);
-    if(semop(sem, &p, 1) == -1) {
-            perror("semop (p): semop failed");
-            exit(1);
-    }
-    if(b->badChef && !b->ramsied){inspect(b);}    
-}
-
 void releaseSemaphore(int sem, Baker *b, int id){
     char *appliance;
     switch(id){
@@ -210,6 +147,72 @@ void inspect(Baker *b){
         b->ramsied = true;
         cook(b, b->targetItem);
     }
+}
+
+void waitSemaphore(int sem, Baker *b, int id){
+    char *appliance;
+    switch(id){
+        case 0:
+            appliance = "SPOON";
+            b->spoon = true;
+            break;
+        case 1:
+            appliance = "MIXER";
+            b->mixer = true;
+            break;
+        case 2:
+            appliance = "BOWL";
+            b->bowl = true;
+            break;
+        case 3:
+            appliance = "OVEN";
+            b->oven = true;
+            break;
+    }
+    printf("THREAD %d FETCHING %s\n", b->num, appliance);
+    if(semop(sem, &p, 1) == -1) {
+            perror("semop (p): semop failed");
+            exit(1);
+    }
+    if(b->badChef && !b->ramsied){inspect(b);}    
+}
+
+void fetchAppliance(Baker *b){
+    waitSemaphore(spoon, b, 0);
+    waitSemaphore(mixer, b, 1);
+    waitSemaphore(bowl, b, 2);
+    waitSemaphore(oven, b, 3);
+    printf("THREAD %d COOKING FOOD\n", b->num);
+    sleep(5);
+    printf("THREAD %d RELEASING APPLIANCES\n", b->num);
+    releaseSemaphore(spoon, b, 0);
+    releaseSemaphore(bowl, b, 2);
+    releaseSemaphore(mixer, b, 1);
+    releaseSemaphore(oven, b, 3);
+}
+
+void cook(Baker *baker, Item targetItem){
+    bool visitPantry = rand() % 2;
+    fetchItem(baker->num, visitPantry, targetItem);
+    fetchItem(baker->num, !visitPantry, targetItem);
+    fetchAppliance(baker);
+}
+
+void * bakerFunc(void* arg){  
+    Baker* baker = (Baker *)arg;
+    srand(time(NULL) + baker->num);
+    Item allItems[5];
+    for(int i = 0; i < 5; i++){
+        allItems[i] = cookBook[i];
+    }
+    scrambleArray(allItems,5, baker->num);
+    Item targetItem;
+    for(int i = 0; i < 5; i++){
+        baker->targetItem = allItems[i];
+        printf("THREAD %d is making %s\n", baker->num, baker->targetItem.name);
+        cook(baker, targetItem);
+    }
+    free(baker);
 }
 
 void clearArray(int arr[], int size){
