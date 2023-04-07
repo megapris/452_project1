@@ -38,7 +38,7 @@ struct Baker{
 
 void cook(struct Baker *baker, struct Item targetItem);
 
-struct Item cookBook[4]= {
+struct Item cookBook[5]= {
     {0, "cookies"},
     {1, "pancakes"},
     {2, "dough"},
@@ -63,6 +63,7 @@ void scrambleArray(struct Item *arr, int size, int offset) {
 void fetchItem(int id, bool pantry, struct Item item){
     if(pantry){
         printf("THREAD %d WAITING FOR PANTRY\n", id);
+        printf("PANTRY: %d\n", pantry);
         if (semop(pantry, &p, 1) == -1) {
             perror("semop (p): semop failed");
             exit(1);
@@ -253,7 +254,7 @@ void main(){
     srand(time(NULL));
     int badChef = rand()%numBakers;
     for(int i = 0; i < numBakers; i++){
-        struct Baker* b = (struct Baker*)malloc(sizeof(Baker));
+        struct Baker* b = (struct Baker*)malloc(sizeof(struct Baker));
         b->num = i;
         b->badChef = i == badChef;
         b->oven = false;
