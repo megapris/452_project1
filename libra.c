@@ -38,21 +38,21 @@ struct Baker{
 
 void cook(struct Baker *baker, struct Item targetItem);
 
-struct Item cookie[1] = {
-    { 0, "cookies"}
+struct Item cookBook[4]= {
+    {0, "cookies"},
+    {1, "pancakes"},
+    {2, "dough"},
+    {3, "pretzels"},
+    {4, "rolls"},
 };
 
-struct Item cookbook[4]= {
-    {struct cookie}
-}
-
-void swap(Item *a, Item *b) {
-    Item temp = *a;
+void swap(struct Item *a, struct Item *b) {
+    struct Item temp = *a;
     *a = *b;
     *b = temp;
 }
 
-void scrambleArray(Item *arr, int size, int offset) {
+void scrambleArray(struct Item *arr, int size, int offset) {
     srand(time(NULL) + offset);
     for (int i = size - 1; i > 0; i--) {
         int j = rand() % (i + 1);
@@ -60,7 +60,7 @@ void scrambleArray(Item *arr, int size, int offset) {
     }
 }
 
-void fetchItem(int id, bool pantry, Item item){
+void fetchItem(int id, bool pantry, struct Item item){
     if(pantry){
         printf("THREAD %d WAITING FOR PANTRY\n", id);
         if (semop(pantry, &p, 1) == -1) {
@@ -89,7 +89,7 @@ void fetchItem(int id, bool pantry, Item item){
     }
 }
 
-void releaseSemaphore(int sem, Baker *b, int id){
+void releaseSemaphore(int sem, struct Baker *b, int id){
     char *appliance;
     switch(id){
         case 0:
@@ -116,7 +116,7 @@ void releaseSemaphore(int sem, Baker *b, int id){
     printf("THREAD %d RELEASED %s\n", b->num, appliance);
 }
 
-void inspect(Baker *b){
+void inspect(struct Baker *b){
     srand(time(NULL) + b->num);
     if(rand()%2 == 0){
         printf("THREAD %d HAS BEEN RAMSIED\n", b->num);
@@ -137,7 +137,7 @@ void inspect(Baker *b){
     }
 }
 
-void waitSemaphore(int sem, Baker *b, int id){
+void waitSemaphore(int sem, struct Baker *b, int id){
     char *appliance;
     switch(id){
         case 0:
@@ -165,7 +165,7 @@ void waitSemaphore(int sem, Baker *b, int id){
     if(b->badChef && !b->ramsied){inspect(b);}    
 }
 
-void fetchAppliance(Baker *b){
+void fetchAppliance(struct Baker *b){
     waitSemaphore(spoon, b, 0);
     waitSemaphore(mixer, b, 1);
     waitSemaphore(bowl, b, 2);
@@ -179,7 +179,7 @@ void fetchAppliance(Baker *b){
     releaseSemaphore(oven, b, 3);
 }
 
-void cook(Baker *baker, Item targetItem){
+void cook(struct Baker *baker, struct Item targetItem){
     bool visitPantry = rand() % 2;
     fetchItem(baker->num, visitPantry, targetItem);
     fetchItem(baker->num, !visitPantry, targetItem);
@@ -187,14 +187,14 @@ void cook(Baker *baker, Item targetItem){
 }
 
 void * bakerFunc(void* arg){  
-    Baker* baker = (Baker *)arg;
+    struct Baker* baker = (struct Baker *)arg;
     srand(time(NULL) + baker->num);
-    Item allItems[5];
+    struct Item allItems[5];
     for(int i = 0; i < 5; i++){
         allItems[i] = cookBook[i];
     }
     scrambleArray(allItems,5, baker->num);
-    Item targetItem;
+    struct Item targetItem;
     for(int i = 0; i < 5; i++){
         baker->targetItem = allItems[i];
         printf("THREAD %d is making %s\n", baker->num, baker->targetItem.name);
@@ -253,7 +253,7 @@ void main(){
     srand(time(NULL));
     int badChef = rand()%numBakers;
     for(int i = 0; i < numBakers; i++){
-        Baker* b = (Baker*)malloc(sizeof(Baker));
+        struct Baker* b = (struct Baker*)malloc(sizeof(Baker));
         b->num = i;
         b->badChef = i == badChef;
         b->oven = false;
@@ -261,7 +261,7 @@ void main(){
         b->spoon = false;
         b->mixer = false;
         b->ramsied = false;
-        b->targetItem = cookies;
+        b->targetItem = cookBook[0];
         pthread_create (&threads[i], NULL, bakerFunc, b);
     }
     int joinReturnValue;
