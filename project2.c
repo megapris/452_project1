@@ -15,26 +15,14 @@ int pantry;
 int refrigerator;
 int bowl;
 int spoon;
-int oven;
+int oven; 
 
 struct sembuf p = { 0, -1, SEM_UNDO};
 struct sembuf v = { 0, +1, SEM_UNDO};
 
-const int flour = 1;
-const int sugar = 2;
-const int yeast = 3;
-const int bakingSoda = 4;
-const int salt = 5;
-const int cinnamon = 6;
-const int egg = 7;
-const int milk = 8;
-const int butter = 9;
-
 typedef struct{
     int itemID;
-    int recipe[10];
     char name[10];
-    int index;
 }Item;
 
 typedef struct{
@@ -50,12 +38,11 @@ typedef struct{
 
 void cook(Baker *baker, Item targetItem);
 
-const Item cookies = {0, {flour, sugar, milk, butter}, "cookies",0};
-const Item pancakes = {1, {flour, sugar, bakingSoda, salt, egg, milk, butter}, "pancakes",0};
-const Item dough = {2, {yeast, sugar, salt}, "dough",0};
-const Item pretzels = {3, {flour, sugar, salt, yeast, bakingSoda, egg}, "pretzels",0};
-const Item rolls = {4, {flour, sugar, salt, butter, egg, cinnamon}, "rolls",0};
-
+const Item cookies = {0, "cookies"};
+const Item pancakes = {1,"pancakes"};
+const Item dough = {2,"dough"};
+const Item pretzels = {3,"pretzels"};
+const Item rolls = {4,"rolls"};
 const Item cookBook[] = {cookies, pancakes, dough, pretzels, rolls};
 
 void swap(Item *a, Item *b) {
